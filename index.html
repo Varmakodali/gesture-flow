@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Sign Language Translation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0a0a0f;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ---- Header Bar ---- */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .app-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .app-title span {
+            color: #818cf8;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #10b981;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* ---- Main Content ---- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ---- Side Panel ---- */
+        .side-panel {
+            width: 280px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .panel-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .prediction-display {
+            font-size: 3rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .confidence-bar-wrap {
+            background: rgba(255,255,255,0.07);
+            border-radius: 6px;
+            height: 6px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .confidence-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #818cf8, #c084fc);
+            border-radius: 6px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .confidence-label {
+            font-size: 0.72rem;
+            color: #6b7280;
+            text-align: right;
+            margin-top: 6px;
+        }
+
+        .sentence-display {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #d1d5db;
+            min-height: 60px;
+            word-break: break-word;
+        }
+
+        .sentence-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: #9ca3af;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background: rgba(129, 140, 248, 0.15);
+            color: #818cf8;
+            border-color: rgba(129, 140, 248, 0.4);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #818cf8;
+        }
+
+        .info-label {
+            font-size: 0.65rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .instructions {
+            font-size: 0.75rem;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .instructions strong {
+            color: #9ca3af;
+        }
+
+        /* ---- Footer ---- */
+        .footer {
+            padding: 8px 24px;
+            background: #0f0f1a;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            font-size: 0.7rem;
+            color: #4b5563;
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 768px) {
+            .side-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-icon">🤟</div>
+                <div class="app-title">Sign<span>Lens</span> — ASL Recognition</div>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                Live
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div class="main-content">
+            <div class="video-section">
+                <img class="video-feed" id="videoFeed" src="/video_feed" alt="Webcam Feed"
+                    onerror="this.style.display='none'; document.getElementById('errorMsg').style.display='flex';">
+                <div id="errorMsg"
+                    style="display:none; position:absolute; color:#ef4444; font-size:1rem; flex-direction:column; align-items:center; gap:8px;">
+                    <span style="font-size:2rem;">📷</span>
+                    <span>Video feed unavailable. Check terminal for errors.</span>
+                </div>
+            </div>
+
+            <div class="side-panel">
+                <div class="panel-section">
+                    <div class="panel-label">Current Prediction</div>
+                    <div class="prediction-display" id="predictionText">—</div>
+                    <div class="confidence-bar-wrap">
+                        <div class="confidence-bar" id="confidenceBar"></div>
+                    </div>
+                    <div class="confidence-label" id="confidenceLabel">Confidence: —</div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-label">Detected Sentence</div>
+                    <div class="sentence-display" id="sentenceText">Show signs to the camera to start...</div>
+                    <div class="sentence-actions">
+                        <button class="btn-action" id="btnBackspace" onclick="backspaceSentence()">⌫ Backspace</button>
+                        <button class="btn-action" id="btnClear" onclick="clearSentence()">✕ Clear</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-label">System Info</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-value">29</div>
+                            <div class="info-label">Classes</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-value">A-Z</div>
+                            <div class="info-label">Alphabet</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-value">64×64</div>
+                            <div class="info-label">Input Size</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-value">CNN</div>
+                            <div class="info-label">Model</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-label">Instructions</div>
+                    <div class="instructions">
+                        <strong>1.</strong> Show your hand clearly to the camera<br>
+                        <strong>2.</strong> Make an ASL letter sign<br>
+                        <strong>3.</strong> Hold steady for best results<br>
+                        <strong>4.</strong> Prediction shows on the video feed
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            SignLens — Real-Time ASL Recognition System • Built with TensorFlow & MediaPipe
+        </div>
+    </div>
+
+    <script>
+        // ---- Live Prediction Polling ----
+        let sentence = "";
+        let lastAddedLabel = "";
+        let holdFrames = 0;
+        const HOLD_THRESHOLD = 12; // frames to hold before adding to sentence
+
+        async function fetchPrediction() {
+            try {
+                const res = await fetch('/prediction');
+                const data = await res.json();
+
+                const label = data.label || "";
+                const conf = data.confidence || 0;
+
+                // Update prediction display
+                const predEl = document.getElementById('predictionText');
+                predEl.textContent = label || "—";
+
+                // Update confidence bar
+                document.getElementById('confidenceBar').style.width = conf + '%';
+                document.getElementById('confidenceLabel').textContent =
+                    label ? `Confidence: ${conf.toFixed(1)}%` : 'Confidence: —';
+
+                // ---- Auto sentence builder ----
+                if (label && conf > 60) {
+                    if (label === lastAddedLabel) {
+                        holdFrames++;
+                    } else {
+                        holdFrames = 0;
+                        lastAddedLabel = label;
+                    }
+
+                    if (holdFrames === HOLD_THRESHOLD) {
+                        if (label === 'space') {
+                            sentence += ' ';
+                        } else if (label === 'del') {
+                            sentence = sentence.slice(0, -1);
+                        } else {
+                            sentence += label;
+                        }
+                        updateSentenceDisplay();
+                    }
+                } else {
+                    holdFrames = 0;
+                    lastAddedLabel = "";
+                }
+
+            } catch (e) {
+                // server may be restarting
+            }
+        }
+
+        function updateSentenceDisplay() {
+            const el = document.getElementById('sentenceText');
+            el.textContent = sentence || 'Show signs to the camera to start...';
+        }
+
+        function backspaceSentence() {
+            sentence = sentence.slice(0, -1);
+            updateSentenceDisplay();
+        }
+
+        function clearSentence() {
+            sentence = "";
+            updateSentenceDisplay();
+        }
+
+        // Poll every 200ms (5 times per second)
+        setInterval(fetchPrediction, 200);
+    </script>
+</body>
+
+</html>
